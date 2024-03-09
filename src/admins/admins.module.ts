@@ -4,6 +4,7 @@ import { AdminsController } from './admins.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Admin, AdminSchema } from './entities/admin.entity';
 import { CommonModule } from 'src/common/common.module';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   controllers: [AdminsController],
@@ -11,6 +12,7 @@ import { CommonModule } from 'src/common/common.module';
   imports: [
     MongooseModule.forFeature([{ name: Admin.name, schema: AdminSchema }]),
     CommonModule,
+    PassportModule,
   ],
   exports: [AdminsService],
 })
