@@ -9,9 +9,12 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CommonModule } from './common/common.module';
 import { SeedModule } from './seed/seed.module';
+import { ConfigModule } from '@nestjs/config';
+import { AuditoryModule } from './auditory/auditory.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     AuthModule,
     AdminsModule,
     ClinicsModule,
@@ -20,8 +23,11 @@ import { SeedModule } from './seed/seed.module';
     MongooseModule.forRoot('mongodb://127.0.0.1:27017/backend-admin'),
     CommonModule,
     SeedModule,
+    AuditoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  constructor() {}
+}

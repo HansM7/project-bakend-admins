@@ -10,7 +10,8 @@ import { Admin } from './entities/admin.entity';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { ResponseService } from 'src/common/services/response.service';
-import { NotFoundError } from 'rxjs';
+import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AdminsService {
@@ -18,14 +19,22 @@ export class AdminsService {
     @InjectModel(Admin.name)
     private readonly adminModel: Model<Admin>,
     private readonly responseService: ResponseService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    // todo de esta forma se trae la info de los tokens a travez del metodo config service
+    console.log('token is', configService.get<string>('JWT_SECRET')); //acepta genericos
+  }
 
   async create(createAdminDto: CreateAdminDto) {
     try {
-      const created = await this.adminModel.create(createAdminDto);
+      const newPassword = bcrypt.hashSync(createAdminDto.password, 10);
+      const created = await this.adminModel.create({
+        ...createAdminDto,
+        password: newPassword,
+      });
       return this.responseService.createResponse(true, 'Admin crated', created);
     } catch (error) {
-      this.handleErrors(error);
+      this.responseService.createErrors(error);
     }
   }
 
@@ -33,7 +42,7 @@ export class AdminsService {
     try {
       return await this.adminModel.find();
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      this.responseService.createErrors(error);
     }
   }
 
@@ -47,7 +56,19 @@ export class AdminsService {
         throw new NotFoundException('Admin not found');
       return admin;
     } catch (error) {
-      this.handleErrors(error);
+      this.responseService.createErrors(error);
+    }
+  }
+
+  async findByEmail(email: string) {
+    try {
+      const admin = await this.adminModel.findOne({ email }).select('-_id');
+
+      if (!admin || admin === null)
+        throw new NotFoundException('Admin not found');
+      return admin;
+    } catch (error) {
+      this.responseService.createErrors(error);
     }
   }
 
@@ -62,7 +83,7 @@ export class AdminsService {
         'Admin updated successfully',
       );
     } catch (error) {
-      this.handleErrors(error);
+      this.responseService.createErrors(error);
     }
   }
 
@@ -75,26 +96,7 @@ export class AdminsService {
         'Admin deleted successfully',
       );
     } catch (error) {
-      this.handleErrors(error);
-    }
-  }
-
-  private handleErrors(error: any) {
-    // todo Errors in mongoDB
-    if (error.code) {
-      if (error.code === 11000) {
-        throw new BadRequestException(
-          `Admin exists in db ${JSON.stringify(error.keyValue)}`,
-        );
-      }
-    } else {
-      // todo Errors in code
-      if (error instanceof BadRequestException) {
-        throw new BadRequestException(error.message);
-      } else if (error instanceof NotFoundException) {
-        throw new NotFoundException(error.message);
-      }
-      throw new InternalServerErrorException();
+      this.responseService.createErrors(error);
     }
   }
 }

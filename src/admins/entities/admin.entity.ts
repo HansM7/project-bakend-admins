@@ -23,7 +23,7 @@ export class Admin extends Document {
   enabled: string;
 
   @Prop({ type: Boolean })
-  logged: string;
+  logged: boolean;
 }
 
 export const AdminSchema = SchemaFactory.createForClass(Admin);
