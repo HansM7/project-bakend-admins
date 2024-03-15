@@ -11,6 +11,7 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { ResponseService } from 'src/common/services/response.service';
 import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AdminsService {
@@ -18,7 +19,11 @@ export class AdminsService {
     @InjectModel(Admin.name)
     private readonly adminModel: Model<Admin>,
     private readonly responseService: ResponseService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    // todo de esta forma se trae la info de los tokens a travez del metodo config service
+    console.log('token is', configService.get<string>('JWT_SECRET')); //acepta genericos
+  }
 
   async create(createAdminDto: CreateAdminDto) {
     try {
